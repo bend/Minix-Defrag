@@ -1,4 +1,4 @@
-#define NCALLS		 113	/* number of system calls allowed */
+#define NCALLS		 115	/* number of system calls allowed */
 
 #define EXIT		   1 
 #define FORK		   2 
@@ -114,6 +114,10 @@
 #define SRV_KILL  	111	/* to PM: special kill call for RS */
 
 #define GCOV_FLUSH	112	/* flush gcov data from server to gcov files */
+
+#define NFRAGS		113	/* Number of frags of the file */
+
+#define DEFRAG		114	/* Defrags the file */ 
 
 #define TASK_REPLY	121	/* to VFS: reply code from drivers, not 
 				 * really a standalone call.

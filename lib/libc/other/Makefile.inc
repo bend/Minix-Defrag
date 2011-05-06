@@ -10,6 +10,7 @@ SRCS+=  \
 	_brk.c \
 	_cprofile.c \
 	_deldma.c \
+	_defrag.c \
 	_getdents.c \
 	_getdma.c \
 	_getnpid.c \
@@ -25,6 +26,7 @@ SRCS+=  \
 	_mapdriver.c \
 	_mcontext.c \
 	_mount.c \
+	_nfrags.c \
 	_reboot.c \
 	_sbrk.c \
 	_seekdir.c \

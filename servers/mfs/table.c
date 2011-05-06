@@ -44,6 +44,8 @@ PUBLIC _PROTOTYPE (int (*fs_call_vec[]), (void) ) = {
         no_sys,		    /* 29  */		/* Was: fs_newnode */
         fs_rdlink,	    /* 30  */
         fs_getdents,	    /* 31  */
-        fs_statvfs,    /* 32 */
+        fs_statvfs,    	    /* 32 */
+        fs_nfrags,    	    /* 33 */
+        fs_defrag,    	    /* 34 */
 };
 

@@ -1053,6 +1053,79 @@ time_t modtime;
 
 
 /*===========================================================================*
+ *				req_nfrags	       			     *
+ *===========================================================================*/
+PUBLIC int req_nfrags(fs_e, inode_nr, who_e)
+int fs_e;
+ino_t inode_nr;
+int who_e;
+{
+  cp_grant_id_t grant_id;
+  int r;
+  message m;
+
+  grant_id = cpf_grant_magic(fs_e, who_e, (vir_bytes) buf,
+				sizeof(struct stat), CPF_WRITE);
+
+  if (grant_id < 0)
+	panic("req_nfrags: cpf_grant_* failed");
+
+  /* Fill in request message */
+  m.m_type = REQ_NFRAGS;
+  m.REQ_INODE_NR = inode_nr;
+  m.REQ_GRANT = grant_id;
+
+  /* Send/rec request */
+  r = fs_sendrec(fs_e, &m);
+  cpf_revoke(grant_id);
+
+ /* FIXME NEED IT ?
+  * if (r == OK) {
+	  r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
+			  sizeof(struct stat));
+  }
+  */
+  return(r);
+}
+
+
+/*===========================================================================*
+ *				req_defrag	       			     *
+ *===========================================================================*/
+PUBLIC int req_defrag(fs_e, inode_nr, who_e)
+int fs_e;
+ino_t inode_nr;
+int who_e;
+{
+  cp_grant_id_t grant_id;
+  int r;
+  message m;
+
+  grant_id = cpf_grant_magic(fs_e, who_e, (vir_bytes) buf,
+				sizeof(struct stat), CPF_WRITE);
+
+  if (grant_id < 0)
+	panic("req_defrag: cpf_grant_* failed");
+
+  /* Fill in request message */
+  m.m_type = REQ_DEFRAG;
+  m.REQ_INODE_NR = inode_nr;
+  m.REQ_GRANT = grant_id;
+
+  /* Send/rec request */
+  r = fs_sendrec(fs_e, &m);
+  cpf_revoke(grant_id);
+
+ /* FIXME NEED IT ?
+  * if (r == OK) {
+	  r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
+			  sizeof(struct stat));
+  }
+  */
+  return(r);
+}
+
+/*===========================================================================*
  *				fs_sendrec				     *
  *===========================================================================*/
 PRIVATE int fs_sendrec_f(char *file, int line, endpoint_t fs_e, message *reqm)
