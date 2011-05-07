@@ -21,6 +21,7 @@ SRCS+=  \
 	cprofile.S \
 	creat.S \
 	deldma.S \
+	defrag.S \
 	dup.S \
 	dup2.S \
 	execl.S \
@@ -82,6 +83,7 @@ SRCS+=  \
 	vm_query_exit.S \
 	mount.S \
 	nanosleep.S \
+	nfrags.S \
 	open.S \
 	opendir.S \
 	pathconf.S \

@@ -1,5 +1,13 @@
+#include <lib.h>
 #include <nfrags.h>
+#include <minix/com.h>
+#include <minix/u64.h>
+#include <string.h>
 #include "fs.h"
+#include "param.h"
+#include <minix/vfsif.h>
+#include "vnode.h"
+#include "vmnt.h"
 
 
 PUBLIC int do_nfrags()

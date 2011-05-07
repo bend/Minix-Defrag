@@ -4,7 +4,7 @@
 
 
 
-PUBLIC int defrag(char* path)
+PUBLIC int defrag(const char* path)
 {
     message m;
     /* CREATE MESSAGE */

@@ -1063,17 +1063,18 @@ int who_e;
   cp_grant_id_t grant_id;
   int r;
   message m;
-
+/*FIXME commented because not using buf
   grant_id = cpf_grant_magic(fs_e, who_e, (vir_bytes) buf,
 				sizeof(struct stat), CPF_WRITE);
-
   if (grant_id < 0)
 	panic("req_nfrags: cpf_grant_* failed");
+*/
 
   /* Fill in request message */
   m.m_type = REQ_NFRAGS;
   m.REQ_INODE_NR = inode_nr;
-  m.REQ_GRANT = grant_id;
+/*  m.REQ_GRANT = grant_id;
+*/
 
   /* Send/rec request */
   r = fs_sendrec(fs_e, &m);
@@ -1101,16 +1102,18 @@ int who_e;
   int r;
   message m;
 
+/* FIXME commented because not using buf
   grant_id = cpf_grant_magic(fs_e, who_e, (vir_bytes) buf,
 				sizeof(struct stat), CPF_WRITE);
 
   if (grant_id < 0)
 	panic("req_defrag: cpf_grant_* failed");
-
+*/
   /* Fill in request message */
   m.m_type = REQ_DEFRAG;
   m.REQ_INODE_NR = inode_nr;
-  m.REQ_GRANT = grant_id;
+/*  m.REQ_GRANT = grant_id;
+*/
 
   /* Send/rec request */
   r = fs_sendrec(fs_e, &m);

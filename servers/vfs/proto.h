@@ -45,6 +45,9 @@ _PROTOTYPE( int dmap_driver_match, (endpoint_t proc, int major)		);
 _PROTOTYPE( void dmap_unmap_by_endpt, (int proc_nr)			);
 _PROTOTYPE( void dmap_endpt_up, (int proc_nr)				);
 
+/* defrag.c */
+_PROTOTYPE( int do_defrag, (void)					);
+
 /* exec.c */
 _PROTOTYPE( int pm_exec, (int proc_e, char *path, vir_bytes path_len,
 			  char *frame, vir_bytes frame_len, vir_bytes *pc));
@@ -111,6 +114,9 @@ _PROTOTYPE( int do_fslogin, (void)                                      );
 _PROTOTYPE( int do_mount, (void)					);
 _PROTOTYPE( int do_umount, (void)					);
 _PROTOTYPE( int unmount, (dev_t dev, char *label)			);
+
+/* nfrags.c */
+_PROTOTYPE( int do_nfrags, (void)					);
 
 /* open.c */
 _PROTOTYPE( int do_close, (void)					);

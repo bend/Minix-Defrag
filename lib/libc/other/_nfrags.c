@@ -4,7 +4,7 @@
 
 
 
-PUBLIC int nfrags(char* path)
+PUBLIC int nfrags(const char* path)
 {
     message m;
     /* CREATE MESSAGE */
