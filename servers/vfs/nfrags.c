@@ -14,9 +14,25 @@ PUBLIC int do_nfrags()
   int r;
   struct vnode *vp;
 
-  if (fetch_name(m_in.name1, m_in.name1_length, M1) != OK) return(err_code);
-  if ((vp = eat_path(PATH_NOFLAGS, fp)) == NULL) return(err_code);
+  /* initialise r */
+  r=OK;
+
+  /* See if file exists */
+  if( fetch_name(m_in.name1, m_in.name1_length, M1) != OK) return(err_code);
+  if( (vp = eat_path(PATH_NOFLAGS, fp)) == NULL) return(err_code);
+  /* Check file type  */
+  if( (vp->v_mode & I_TYPE) != I_REGULAR ) 
+      r = EPERM;
+  /* If error, return the inode. */
+  if (r != OK) {
+      printf("result not ok, returning vnode");
+	  put_vnode(vp);
+	  return(r);
+  }
+  /* send request to file system */
+  printf("sending request to fs");
   r = req_nfrags(vp->v_fs_e, vp->v_inode_nr, who_e);
+  printf("number of frags received from request: %d", r);
   put_vnode(vp);
   return r;
 }

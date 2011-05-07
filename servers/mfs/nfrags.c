@@ -23,18 +23,13 @@ PUBLIC int fs_nfrags()
   for (pos=0; pos<rip->i_size; pos++){                                  /* count number of fragments */
     block_number = read_map(rip,pos);
     if (block_number-previous_block_number>1 || block_number-previous_block_number<0 ){
-      printf("currentblock = %d, previous = %d, so we increment nfrags\n", block_number, previous_block_number);
+      /* printf("currentblock = %d, previous = %d, so we increment nfrags\n", block_number, previous_block_number);
+      */
       nfrags++;
     }
     previous_block_number=block_number;
   }
   printf("number of fragments = %d\n", nfrags);
-
-
-
-
-
-  
   
   put_inode(rip);		/* release the inode */
   return(r);
