@@ -4,12 +4,14 @@
 
 
 
-PUBLIC int nfrags(const char* path)
+PUBLIC int nfrags(const char* path )
 {
     message m;
+    int nfrags;
     /* CREATE MESSAGE */
     m.m1_i1 = strlen(path) + 1;
     m.m1_p1 = (char* ) path;
-    return (_syscall(VFS_PROC_NR, NFRAGS, &m));
+    _syscall(VFS_PROC_NR, NFRAGS, &m);
+    return nfrags
 }
 
