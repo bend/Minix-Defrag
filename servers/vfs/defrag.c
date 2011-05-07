@@ -1,4 +1,3 @@
-#include <lib.h>
 #include <defrag.h>
 #include <minix/com.h>
 #include <minix/u64.h>
