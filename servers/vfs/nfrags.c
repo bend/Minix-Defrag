@@ -13,7 +13,6 @@ PUBLIC int do_nfrags()
 {
   int r;
   struct vnode *vp;
-  int nfrags;
   cp_grant_id_t grant_id;
 
   /* initialise r */
@@ -34,9 +33,8 @@ PUBLIC int do_nfrags()
   /* send request to file system */
   printf("sending request to fs\n");
   
-  /* m_in.name2 devrait contenir le pointeur int * vers nfrags dans la fonction libc */
-  nfrags = req_nfrags(vp->v_fs_e, vp->v_inode_nr, who_e, (int *) m_in.name2);
-  printf("number of frags received from request: %d\n", nfrags);
+  /* m_in.name2 contient le pointeur int * vers nfrags créé dans la fonction libc */
+  r = req_nfrags(vp->v_fs_e, vp->v_inode_nr, who_e, (int *) m_in.name2);
   put_vnode(vp);
   return r;
 }
