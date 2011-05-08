@@ -33,7 +33,9 @@ PUBLIC int do_nfrags()
   }
   /* send request to file system */
   printf("sending request to fs\n");
-  nfrags = req_nfrags(vp->v_fs_e, vp->v_inode_nr, who_e, &nfrags);
+  
+  /* m_in.name2 devrait contenir le pointeur int * vers nfrags dans la fonction libc */
+  nfrags = req_nfrags(vp->v_fs_e, vp->v_inode_nr, who_e, (int *) m_in.name2);
   printf("number of frags received from request: %d\n", nfrags);
   put_vnode(vp);
   return r;

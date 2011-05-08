@@ -1083,12 +1083,12 @@ int *buf;
   /* recieves good value!*/ 
   printf("le sb mis à jour dans send_rec = %d\n",sb);
   if (r == OK ) {
-      return sb;
-      /*
+  /* essai de vircopy vers le pointeur nfrags défini dans nfrags de libc  */
       printf("vircopying\n");
 	  r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
 			  sizeof(sb));
-      */
+      /* return sb pour avoir valeur apres l'appel de send_rec */
+      return sb;
   }
   else {
     return -1;
