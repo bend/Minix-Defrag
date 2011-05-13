@@ -104,6 +104,7 @@ PUBLIC int fs_defrag()
   int nblocks;
   int pos,i, scale, block_count;
   long zone;
+  zone_t current_zone, previous_zone;
   bit_t first_bit; 
   block_t block_number, previous_block_number, first_block, src_block;
   struct buf *bp_src, *bp_dst;
@@ -115,11 +116,12 @@ PUBLIC int fs_defrag()
   if ((rip = get_inode(fs_dev, (ino_t) fs_m_in.REQ_INODE_NR)) == NULL)
 	return(EINVAL);
 
+  /* set scale for block-zone conversion */
+  scale = rip->i_sp->s_log_zone_size;
+
   for (pos=0; pos<rip->i_size; pos++){                                  /* count number of fragments */
     block_number = read_map(rip,pos);
     if (block_number!=previous_block_number){
-      /* printf("currentblock = %d, previous = %d, so we increment nfrags\n", block_number, previous_block_number);
-      */
       nblocks++;
     }
     previous_block_number=block_number;
@@ -131,7 +133,13 @@ PUBLIC int fs_defrag()
 
   printf("need %d blocks region", nblocks);
   first_bit = search_free_region(rip->i_sp, ZMAP,0 ,nblocks); 
-  first_block = first_bit<<scale;
+
+  for(i=0; i<nblocks; i++) {
+    alloc_bit(rip->i_dev, ZMAP, first_bit+i);
+  }
+
+  /* see alloc_zone */
+  first_block = ( (zone_t) (rip->i_sp->s_firstdatazone - 1) + (zone_t) first_bit);
   printf("first bits : %d\n", first_bit);
   /*
   first_bit = search_free_region(rip->i_sp, ZMAP,first_bit ,nblocks); 
@@ -156,21 +164,32 @@ PUBLIC int fs_defrag()
     printf("put block \n");
     put_block(bp_src,PARTIAL_DATA_BLOCK);
     put_block(bp_dst,PARTIAL_DATA_BLOCK);
+
+   }
+   previous_block_number=block_number;
     
   }
   /*modify inode*/
-  scale = rip->i_sp->s_log_zone_size;
   zone = (pos/rip->i_sp->s_block_size) >> scale;
 
   printf("modify inode\n");
+  for (i=0; i<V2_NR_TZONES; i++) {
+    printf("zone number[%d] = %d\n", i, rip->i_zone[i]);
+  }
+  printf("----------------------------------\n");
+  for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size){ 
+    write_map(rip, pos, NULL, WMAP_FREE); 
+  }
+  printf("did clear inode\n");
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size){ 
     block_number = (pos/rip->i_sp->s_block_size)+first_block;
     zone = block_number >> scale;
-    /*
-    printf("block_number = %d, zone = %d\n", block_number, zone);
-    */
-    write_map(rip, pos, zone, WMAP_FREE); /* calls free_zone */
     write_map(rip, pos, zone, 0);
+  }
+  rip->i_dirt=DIRTY;
+  printf("zones after :\n");
+  for (i=0; i<V2_NR_TZONES; i++) {
+    printf("zone number[%d] = %d\n", i, rip->i_zone[i]);
   }
   printf("release inode\n");
   put_inode(rip);		/* release the inode */
