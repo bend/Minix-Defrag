@@ -43,6 +43,7 @@ bit_t origin;			/* number of bit to start searching at */
   /* Iterate over all blocks plus one, because we start in the middle. */
   bcount = bit_blocks + 1;
   do {
+    /* fs_dev global variable is set correctly at mount time for this process  */
 	bp = get_block(sp->s_dev, start_block + block, NORMAL);
 	wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
 
@@ -60,11 +61,10 @@ bit_t origin;			/* number of bit to start searching at */
 		for (i = 0; i<FS_BITCHUNK_BITS && current_region_size<region_size ; ++i) { 
             if ( (k & (1 << i)) == 0){
               current_region_size++;
-              printf("current region size %d\n", current_region_size);
 
             }
             else{
-                printf("region ended  \n");
+                printf("region ended at size %d  \n", current_region_size);
                 current_region_size=0;
             }
         }
@@ -102,12 +102,15 @@ PUBLIC int fs_defrag()
   register int r;              /* return value */
   register struct inode *rip;  /* target inode */
   int nblocks;
-  int pos;
+  int pos,i, scale, block_count;
+  long zone;
   bit_t first_bit; 
-  block_t block_number, previous_block_number;
+  block_t block_number, previous_block_number, first_block, src_block;
+  struct buf *bp_src, *bp_dst;
   nblocks = 1;
   pos = 0;
 
+  r=0;
 
   if ((rip = get_inode(fs_dev, (ino_t) fs_m_in.REQ_INODE_NR)) == NULL)
 	return(EINVAL);
@@ -122,11 +125,54 @@ PUBLIC int fs_defrag()
     previous_block_number=block_number;
   }
 
+  /*
+  print_map(rip->i_sp, ZMAP);
+  */
+
   printf("need %d blocks region", nblocks);
   first_bit = search_free_region(rip->i_sp, ZMAP,0 ,nblocks); 
-
-  print_map(rip->i_sp, ZMAP);
+  first_block = first_bit<<scale;
+  printf("first bits : %d\n", first_bit);
+  /*
+  first_bit = search_free_region(rip->i_sp, ZMAP,first_bit ,nblocks); 
   printf("FS_DEFRAG_OK %d\n", first_bit);
+  */
+  /*
+  allouer toutes les  zones
+  */
+  block_count=0;
+  for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size,block_count++){
+    src_block = read_map(rip,pos);
+    printf(" copy count %d src %d to dst %d\n", block_count, src_block, first_block+block_count);
+    /* read current block */
+    bp_src = get_block(rip->i_dev, src_block, 1);  /* defined in cache.c */
+    bp_dst = get_block(rip->i_dev, first_block+block_count, 1);  
+    /* write block in current zone */
+    printf("memset \n");
+    memset(bp_dst->b_data, bp_src->b_data, (size_t) bp_src->b_bytes);
+    bp_dst->b_dirt = DIRTY;
+
+    /*free cached blocks*/
+    printf("put block \n");
+    put_block(bp_src,PARTIAL_DATA_BLOCK);
+    put_block(bp_dst,PARTIAL_DATA_BLOCK);
+    
+  }
+  /*modify inode*/
+  scale = rip->i_sp->s_log_zone_size;
+  zone = (pos/rip->i_sp->s_block_size) >> scale;
+
+  printf("modify inode\n");
+  for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size){ 
+    block_number = (pos/rip->i_sp->s_block_size)+first_block;
+    zone = block_number >> scale;
+    /*
+    printf("block_number = %d, zone = %d\n", block_number, zone);
+    */
+    write_map(rip, pos, zone, WMAP_FREE); /* calls free_zone */
+    write_map(rip, pos, zone, 0);
+  }
+  printf("release inode\n");
   put_inode(rip);		/* release the inode */
   return(r);
 }
