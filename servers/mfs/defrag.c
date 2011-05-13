@@ -135,7 +135,7 @@ PUBLIC int fs_defrag()
   first_bit = search_free_region(rip->i_sp, ZMAP,0 ,nblocks); 
 
   for(i=0; i<nblocks; i++) {
-    alloc_bit(rip->i_dev, ZMAP, first_bit+i);
+    alloc_bit(rip->i_sp, ZMAP, first_bit+ i);
   }
 
   /* see alloc_zone */
@@ -146,7 +146,7 @@ PUBLIC int fs_defrag()
   printf("FS_DEFRAG_OK %d\n", first_bit);
   */
   /*
-  allouer toutes les  zones
+  Allocate zones and copy blocks
   */
   block_count=0;
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size,block_count++){
@@ -164,14 +164,8 @@ PUBLIC int fs_defrag()
     printf("put block \n");
     put_block(bp_src,PARTIAL_DATA_BLOCK);
     put_block(bp_dst,PARTIAL_DATA_BLOCK);
-
-   }
-   previous_block_number=block_number;
-    
   }
   /*modify inode*/
-  zone = (pos/rip->i_sp->s_block_size) >> scale;
-
   printf("modify inode\n");
   for (i=0; i<V2_NR_TZONES; i++) {
     printf("zone number[%d] = %d\n", i, rip->i_zone[i]);
