@@ -105,7 +105,7 @@ PUBLIC int fs_defrag()
   int pos,i, scale, block_count;
   long zone;
   zone_t current_zone, previous_zone;
-  bit_t first_bit; 
+  bit_t first_bit, current_bit; 
   block_t block_number, previous_block_number, first_block, src_block;
   struct buf *bp_src, *bp_dst;
   nblocks = 1;
@@ -135,7 +135,7 @@ PUBLIC int fs_defrag()
   first_bit = search_free_region(rip->i_sp, ZMAP,0 ,nblocks); 
 
   for(i=0; i<nblocks; i++) {
-    alloc_bit(rip->i_dev, ZMAP, first_bit+i);
+    alloc_bit(rip->i_sp, ZMAP, first_bit+i);
   }
 
   /* see alloc_zone */
@@ -148,6 +148,15 @@ PUBLIC int fs_defrag()
   /*
   allouer toutes les  zones
   */
+  current_bit = first_bit;
+  for(i=0;i<nblocks;i++){
+    current_zone = (first_block+i) >> scale;
+    if (current_zone!= previous_zone){
+      alloc_bit(rip->i_sp, ZMAP, current_bit);
+      current_bit++;
+    }
+    previous_zone=current_zone;
+  }
   block_count=0;
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size,block_count++){
     src_block = read_map(rip,pos);
@@ -165,9 +174,6 @@ PUBLIC int fs_defrag()
     put_block(bp_src,PARTIAL_DATA_BLOCK);
     put_block(bp_dst,PARTIAL_DATA_BLOCK);
 
-   }
-   previous_block_number=block_number;
-    
   }
   /*modify inode*/
   zone = (pos/rip->i_sp->s_block_size) >> scale;
