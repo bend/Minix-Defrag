@@ -100,6 +100,86 @@ bit_t origin;			/* number of bit to start searching at */
 }
 
 /*===========================================================================*
+ *				alloc_this_bit				     *
+ *===========================================================================*/
+PUBLIC bit_t alloc_this_bit(sp, map, origin)
+struct super_block *sp;		/* the filesystem to allocate from */
+int map;			/* IMAP (inode map) or ZMAP (zone map) */
+bit_t origin;			/* number of bit to allocate */
+{
+/* Allocate a bit from a bit map and return its bit number. */
+
+  block_t start_block;		/* first bit block */
+  block_t block;
+  bit_t map_bits;		/* how many bits are there in the bit map? */
+  short bit_blocks;		/* how many blocks are there in the bit map? */
+  unsigned word, bcount;
+  struct buf *bp;
+  bitchunk_t *wptr, *wlim, k;
+  bit_t i, b;
+
+  if (sp->s_rd_only)
+	panic("can't allocate bit on read-only filesys");
+
+  if (map == IMAP) {
+	start_block = START_BLOCK;
+	map_bits = (bit_t) (sp->s_ninodes + 1);
+	bit_blocks = sp->s_imap_blocks;
+  } else {
+	start_block = START_BLOCK + sp->s_imap_blocks;
+	map_bits = (bit_t) (sp->s_zones - (sp->s_firstdatazone - 1));
+	bit_blocks = sp->s_zmap_blocks;
+  }
+
+  /* Figure out where to start the bit search (depends on 'origin'). */
+  if (origin >= map_bits) origin = 0;	/* for robustness */
+
+  /* Locate the starting place. */
+  block = (block_t) (origin / FS_BITS_PER_BLOCK(sp->s_block_size));
+  word = (origin % FS_BITS_PER_BLOCK(sp->s_block_size)) / FS_BITCHUNK_BITS;
+
+  /* Iterate over all blocks plus one, because we start in the middle. */
+  bcount = bit_blocks + 1;
+  do {
+	bp = get_block(sp->s_dev, start_block + block, NORMAL);
+	wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
+
+	/* Iterate over the words in block. */
+	for (wptr = &bp->b_bitmap[word]; wptr < wlim; wptr++) {
+
+		/* Does this word contain a free bit? */
+		if (*wptr == (bitchunk_t) ~0) continue;
+
+		/* Find and allocate the free bit. */
+		k = (bitchunk_t) conv2(sp->s_native, (int) *wptr);
+		for (i = 0; (k & (1 << i)) != 0 || (((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size)) + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS + i) < origin; ++i) {}
+
+		/* Bit number from the start of the bit map. */
+		b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
+		    + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
+		    + i;
+
+		/* Don't allocate bits beyond the end of the map. */
+		if (b >= map_bits) break;
+
+		if (b != origin ) { printf("first free bit found %d is different from requested %d \n",b,origin); break; };
+		/* Allocate and return bit number. */
+		k |= 1 << i;
+		*wptr = (bitchunk_t) conv2(sp->s_native, (int) k);
+		bp->b_dirt = DIRTY;
+		put_block(bp, MAP_BLOCK);
+		return(b);
+	}
+	put_block(bp, MAP_BLOCK);
+	if (++block >= (unsigned int) bit_blocks) /* last block, wrap around */
+		block = 0;
+	word = 0;
+  } while (--bcount > 0);
+  return(NO_BIT);		/* no bit could be allocated */
+}
+
+
+/*===========================================================================*
  *				free_bit				     *
  *===========================================================================*/
 PUBLIC void free_bit(sp, map, bit_returned)
