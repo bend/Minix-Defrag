@@ -104,7 +104,7 @@ _PROTOTYPE( int fs_statvfs, (void)					);
 _PROTOTYPE( bit_t alloc_bit, (struct super_block *sp, int map, bit_t origin));
 _PROTOTYPE( void free_bit, (struct super_block *sp, int map,
 						bit_t bit_returned)	);
-_PROTOTYPE( unsigned int get_block_size, (dev_t dev)				);
+_PROTOTYPE( unsigned int get_block_size, (dev_t dev)			);
 _PROTOTYPE( struct super_block *get_super, (dev_t dev)			);
 _PROTOTYPE( int read_super, (struct super_block *sp)			);
 
@@ -119,7 +119,7 @@ _PROTOTYPE( time_t clock_time, (void)					);
 _PROTOTYPE( unsigned conv2, (int norm, int w)				);
 _PROTOTYPE( long conv4, (int norm, long x)				);
 _PROTOTYPE( void mfs_nul_f, (char *file, int line, char *str, unsigned int len, 
-			     unsigned int maxlen)				);
+			     unsigned int maxlen)			);
 _PROTOTYPE( int min, (unsigned int l, unsigned int r)			);
 _PROTOTYPE( int no_sys, (void)						);
 _PROTOTYPE( void sanitycheck, (char *file, int line)			);

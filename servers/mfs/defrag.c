@@ -126,9 +126,14 @@ PUBLIC int fs_defrag()
 		return(EINVAL);
 
 	nfrags = nb_frags(rip);
+	if(nfrags == 1)	{		/* No need to defrag, file is not fragmented */
+		r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
+				(size_t) sizeof(int), D);
+		return r;					/* FIXME Need to do the vircopy */
+	}
 	/* set scale for block-zone conversion */
 	scale = rip->i_sp->s_log_zone_size;
-	/* count number of fragments */
+	/* count number of blocks */
 	for (pos=0; pos<rip->i_size; pos++) {  
 		block_number = read_map(rip,pos);
 		if (block_number!=previous_block_number) {
@@ -139,7 +144,11 @@ PUBLIC int fs_defrag()
 
 	printf("need %d blocks region\n", nblocks);
 	first_bit = search_free_region(rip->i_sp, ZMAP,0 ,nblocks>>scale); 
-
+	if (first_bit == NO_BIT) {		/* No space to defrag FIXME here also */
+		r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
+				(size_t) sizeof(int), D);
+		return r;					/* FIXME Need to do the vircopy */
+	}
 	for(i=0; i<nblocks; i++) {
 		alloced_bit = alloc_this_bit(rip->i_sp, ZMAP, first_bit+i);
 		printf("requested %d to alloc bit and got back %d\n", first_bit+i, alloced_bit);
