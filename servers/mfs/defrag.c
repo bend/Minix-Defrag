@@ -12,7 +12,6 @@ struct super_block *sp;		/* the filesystem to allocate from */
 int map;			/* IMAP (inode map) or ZMAP (zone map) */
 bit_t origin;			/* number of bit to start searching at */
 {
-<<<<<<< HEAD:servers/mfs/defrag.c
 /* Allocate a bit from a bit map and return its bit number. */
 
   block_t start_block;		/* first bit block */
