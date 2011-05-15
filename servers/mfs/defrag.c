@@ -48,7 +48,7 @@ bit_t origin;			/* number of bit to start searching at */
 	wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
 
 	/* Iterate over the words in block. */
-	for (wptr = &bp->b_bitmap[word]; wptr < wlim; wptr++) {
+	for (wptr = &bp->b_bitmap[word]; wptr < wlim && current_region_size<region_size; wptr++) {
 
 		/* Does this word contain a free bit? */
 		if (*wptr == (bitchunk_t) ~0)  {
@@ -64,7 +64,7 @@ bit_t origin;			/* number of bit to start searching at */
                   + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
                   + i;
               current_region_size++;
-              printf("bit number %d is zero\n",b);
+              printf("bit number %d is zero. current_size = %d and need %d\n",b, current_region_size, region_size);
 
             }
             else{
