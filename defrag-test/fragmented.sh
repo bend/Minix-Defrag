@@ -1,0 +1,9 @@
+echo "jkljklmhjkldhfljfhdjlsfhdjqsfhjqsfjsdlfhjqfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjskfhdjskfhdkjsfhdjskfhdjsfdhjsks" > /dev/urandom
+for i in 0 1 2 3 4 5 6 7 8 9; do
+dd if=/dev/urandom of=/mnt/test/f$i bs=4096 count=1;
+done
+
+
+for i in 1  3  5  7; do 
+  rm /mnt/test/f$i
+done
