@@ -1102,38 +1102,38 @@ int *buf;
 /*===========================================================================*
  *				req_defrag	       			     *
  *===========================================================================*/
-PUBLIC int req_defrag(fs_e, inode_nr, who_e)
+PUBLIC int req_defrag(fs_e, inode_nr, who_e, buf)
 int fs_e;
 ino_t inode_nr;
 int who_e;
+int *buf;
 {
-  cp_grant_id_t grant_id;
-  int r;
-  message m;
+    int sb;
+    cp_grant_id_t grant_id;
+    int r;
+    message m;
 
-/* FIXME commented because not using buf
-  grant_id = cpf_grant_magic(fs_e, who_e, (vir_bytes) buf,
-				sizeof(struct stat), CPF_WRITE);
-
-  if (grant_id < 0)
+    grant_id = cpf_grant_direct(fs_e,  (vir_bytes) &sb,
+				sizeof(int), CPF_WRITE);
+    if (grant_id < 0)
 	panic("req_defrag: cpf_grant_* failed");
-*/
-  /* Fill in request message */
-  m.m_type = REQ_DEFRAG;
-  m.REQ_INODE_NR = inode_nr;
-/*  m.REQ_GRANT = grant_id;
-*/
+    /* Fill in request message */
+    m.m_type = REQ_DEFRAG;
+    m.REQ_INODE_NR = inode_nr;
+  m.REQ_GRANT = grant_id;
+
 
   /* Send/rec request */
   r = fs_sendrec(fs_e, &m);
   cpf_revoke(grant_id);
 
- /* FIXME NEED IT ?
-  * if (r == OK) {
+  /* recieves good value!*/ 
+  printf("le sb mis à jour dans send_rec = %d\n",sb);
+  if (r == OK ) {
+  /* vircopy vers le pointeur defrags défini dans defrag de libc, passé comme argument buf par l'appel à req_defrag dans do_defrag  */
 	  r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
-			  sizeof(struct stat));
+			  sizeof(sb));
   }
-  */
   return(r);
 }
 

@@ -8,11 +8,11 @@
 
 PUBLIC int fs_nfrags()
 {
-  register int r;              /* return value */
-  register struct inode *rip;  /* target inode */
-  off_t pos;
-bit_t first_bit;
-int nblocks;
+  register int r;              	/* return value */
+  register struct inode *rip;  	/* target inode */
+  off_t pos;			
+  bit_t first_bit;
+  int nblocks;
   block_t block_number, previous_block_number;
   int nfrags, scale;
 
@@ -24,18 +24,7 @@ int nblocks;
 	return(EINVAL);
   scale = rip->i_sp->s_log_zone_size;
    
-  printf("FS_NFRAGS_OK\n");
-  for (pos=0; pos<rip->i_size; pos++){                                  /* count number of fragments */
-    block_number = read_map(rip,pos);
-    if (block_number!=previous_block_number)
-      printf("currentblock = %d\n", block_number>>scale);
-    if (block_number-previous_block_number>1 || block_number-previous_block_number<0 ){
-      
-      nfrags++;
-    }
-    previous_block_number=block_number;
-  }
-
+  nfrags  = nb_frags(rip);
   printf("will print map\n");
   print_map(rip->i_sp, ZMAP);
 

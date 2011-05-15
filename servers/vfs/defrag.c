@@ -13,7 +13,8 @@ PUBLIC int do_defrag()
 {
   int r;
   struct vnode *vp;
-
+  cp_grant_id_t grant_id;
+  
   /* initialise r */
   r=OK;
 
@@ -32,7 +33,7 @@ PUBLIC int do_defrag()
   /* send request to file system */
   printf("sending request to fs");
   /* message is sent to the right process, which will have the global variable fs_dev set correctly*/
-  r = req_defrag(vp->v_fs_e, vp->v_inode_nr, who_e);
+  r = req_defrag(vp->v_fs_e, vp->v_inode_nr, who_e, (int*) m_in.name2);
   put_vnode(vp);
   return r;
 }
