@@ -226,7 +226,7 @@ _PROTOTYPE( int req_readwrite, (endpoint_t fs_e, ino_t inode_nr,
 				u64_t pos, int rw_flag,
 				endpoint_t user_e, char *user_addr,
 				unsigned int num_of_bytes, u64_t *new_posp,
-				unsigned int *cum_iop)					); 
+				unsigned int *cum_iop)			); 
 _PROTOTYPE( int req_rename, (endpoint_t fs_e, ino_t old_dir,
 			char *old_name, ino_t new_dir, char *new_name)	);
 _PROTOTYPE( int req_rmdir, (endpoint_t fs_e, ino_t inode_nr,
@@ -254,8 +254,8 @@ _PROTOTYPE( int do_stat, (void)						);
 _PROTOTYPE( int do_fstatfs, (void)					);
 _PROTOTYPE( int do_statvfs, (void)					);
 _PROTOTYPE( int do_fstatvfs, (void)					);
-_PROTOTYPE( int do_rdlink, (void)                                      );
-_PROTOTYPE( int do_lstat, (void)                                       );
+_PROTOTYPE( int do_rdlink, (void)                                      	);
+_PROTOTYPE( int do_lstat, (void)                                       	);
 
 /* time.c */
 _PROTOTYPE( int do_utime, (void)					);
@@ -266,7 +266,8 @@ _PROTOTYPE( unsigned conv2, (int norm, int w)				);
 _PROTOTYPE( long conv4, (int norm, long x)				);
 _PROTOTYPE( int fetch_name, (char *path, int len, int flag)		);
 _PROTOTYPE( int no_sys, (void)						);
-_PROTOTYPE( int isokendpt_f, (char *f, int l, endpoint_t e, int *p, int ft));
+_PROTOTYPE( int isokendpt_f, (char *f, int l, endpoint_t e, 
+      int *p, int ft)							);
 _PROTOTYPE( int in_group, (struct fproc *rfp, gid_t grp)		);
 
 #define okendpt(e, p) isokendpt_f(__FILE__, __LINE__, (e), (p), 1)

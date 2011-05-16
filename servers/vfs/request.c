@@ -1067,8 +1067,7 @@ int *buf;
   message m;
   grant_id = cpf_grant_direct(fs_e, (vir_bytes) &sb,
       sizeof(int), CPF_WRITE);
-  if (grant_id < 0)
-    panic("req_nfrags: cpf_grant_* failed");
+  if (grant_id < 0) panic("req_nfrags: cpf_grant_* failed");
 
   /* Fill in request message */
   m.m_type = REQ_NFRAGS;
@@ -1080,10 +1079,9 @@ int *buf;
   r = fs_sendrec(fs_e, &m);
   cpf_revoke(grant_id);
 
-  /* receives good value!*/ 
   if (r == OK ) {
-    /* vircopy of value to the pointer defined in libc/defrag, passed as argument buf in the call to req_defrag and do_defrag */
-    r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
+  	/* vircopy of value to the pointer defined in libc/defrag, passed as argument buf in the call to req_defrag and do_defrag */
+    	r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
         sizeof(sb));
   } 
   return(r);
@@ -1106,20 +1104,17 @@ int *buf;
 
   grant_id = cpf_grant_direct(fs_e,  (vir_bytes) &sb,
       sizeof(int), CPF_WRITE);
-  if (grant_id < 0)
-    panic("req_defrag: cpf_grant_* failed");
+  if (grant_id < 0) panic("req_defrag: cpf_grant_* failed");
   /* Fill in request message */
   m.m_type = REQ_DEFRAG;
   m.REQ_INODE_NR = inode_nr;
   m.REQ_GRANT = grant_id;
 
-
   /* Send/rec request */
   r = fs_sendrec(fs_e, &m);
   cpf_revoke(grant_id);
 
-  /* recieves good value!*/ 
-    /* vircopy of value to the pointer defined in libc/defrag, passed as argument buf in the call to req_defrag and do_defrag */
+  /* vircopy of value to the pointer defined in libc/defrag, passed as argument buf in the call to req_defrag and do_defrag */
   r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
         sizeof(sb));
   return(r);
