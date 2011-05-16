@@ -22,8 +22,7 @@ PUBLIC int do_nfrags()
   if( fetch_name(m_in.name1, m_in.name1_length, M1) != OK) return(err_code);
   if( (vp = eat_path(PATH_NOFLAGS, fp)) == NULL) return(err_code);
   /* Check file type  */
-  if( (vp->v_mode & I_TYPE) != I_REGULAR ) 
-      r = EPERM;
+  if( (vp->v_mode & I_TYPE) != I_REGULAR ) r = EPERM;
   /* If error, return the inode. */
   if (r != OK) {
 	  put_vnode(vp);

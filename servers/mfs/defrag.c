@@ -4,13 +4,14 @@
 #include "super.h"
 #include <minix/vfsif.h>
 #include <stdio.h>
+
 /*===========================================================================*
  *				search_free_region              	     *
  *===========================================================================*/
 PUBLIC bit_t search_free_region(sp, map, origin, region_size)
-  struct super_block *sp;		/* the filesystem to allocate from */
-  int map;			/* IMAP (inode map) or ZMAP (zone map) */
-  bit_t origin;			/* number of bit to start searching at */
+struct super_block *sp;		/* the filesystem to allocate from */
+int map;			/* IMAP (inode map) or ZMAP (zone map) */
+bit_t origin;			/* number of bit to start searching at */
 {
   /* Allocate a bit from a bit map and return its bit number. */
 
@@ -41,47 +42,46 @@ PUBLIC bit_t search_free_region(sp, map, origin, region_size)
   /* Iterate over all blocks plus one, because we start in the middle. */
   bcount = bit_blocks + 1;
   do {
-    /* fs_dev global variable is set correctly at mount time for this process  */
-    bp = get_block(sp->s_dev, start_block + block, NORMAL);
-    wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
+  	/* fs_dev global variable is set correctly at mount time for this process  */
+  	bp = get_block(sp->s_dev, start_block + block, NORMAL);
+  	wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
 
-    /* Iterate over the words in block. */
-    for (wptr = &bp->b_bitmap[word]; wptr < wlim && current_region_size<region_size; wptr++) {
-      /* Does this word contain a free bit? */
-      if (*wptr == (bitchunk_t) ~0)  {
-        current_region_size=0;
-        continue;
-      }
+   	 /* Iterate over the words in block. */
+   	for (wptr = &bp->b_bitmap[word]; wptr < wlim && current_region_size<region_size; wptr++) {
+		/* Does this word contain a free bit? */
+		if (*wptr == (bitchunk_t) ~0)  {
+		        current_region_size=0;
+		        continue;
+		}
 
-      /* Increment the free bits. */
-      k = (bitchunk_t) conv2(sp->s_native, (int) *wptr);
-      for (i = 0; i<FS_BITCHUNK_BITS && current_region_size<region_size ; i++) { 
-        if ( (k & (1 << i)) == 0){
-          b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
-            + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
-            + i;
-          current_region_size++;
-        }
-        else{
-          b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
-            + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
-            + i;
-          current_region_size=0;
-        }
-      }
+		/* Increment the free bits. */
+		k = (bitchunk_t) conv2(sp->s_native, (int) *wptr);
+		for (i = 0; i<FS_BITCHUNK_BITS && current_region_size<region_size ; i++) { 
+		        if ( (k & (1 << i)) == 0){
+		    	    b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
+		    	    + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
+		    	    + i;
+		    	    current_region_size++;
+		        } else {
+		    	    b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
+		    	    + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
+		    	    + i;
+		    	    current_region_size=0;
+		        }
+		}	
 
-    }
-    put_block(bp, MAP_BLOCK);
-    if (++block >= (unsigned int) bit_blocks) /* last block, wrap around */
-      block = 0;
-    word = 0;
+  	}	
+	put_block(bp, MAP_BLOCK);
+	if (++block >= (unsigned int) bit_blocks) /* last block, wrap around */
+		block = 0;
+	word = 0;
   } while (--bcount > 0 && current_region_size<region_size);
 
   if (current_region_size>=region_size) {
-    /* Don't allocate bits beyond the end of the map. */
-    if (b >= map_bits) { return(NO_BIT);}
-    b=b-region_size+1; /* go back to first bit of zone */
-    return(b);
+	/* Don't allocate bits beyond the end of the map. */
+	if (b >= map_bits) { return(NO_BIT);}
+	b=b-region_size+1; /* go back to first bit of zone */
+	return(b);
   }
   return(NO_BIT);		/* no bit could be allocated */
 }
@@ -105,35 +105,33 @@ PUBLIC int fs_defrag()
   pos = 0;
   r=0;
 
-  if ((rip = get_inode(fs_dev, (ino_t) fs_m_in.REQ_INODE_NR)) == NULL)
-    return(EINVAL);
+  if ((rip = get_inode(fs_dev, (ino_t) fs_m_in.REQ_INODE_NR)) == NULL)  return(EINVAL);
 
   nfrags = nb_frags(rip);
+  
   if(nfrags == 1) {		/* No need to defrag, file is not fragmented */
-    r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
-        (size_t) sizeof(int), D);
-    return r;
+	r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
+	    (size_t) sizeof(int), D);
+      	return r;
   }
   /* set scale for block-zone conversion */
   scale = rip->i_sp->s_log_zone_size;
   /* count number of blocks */
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size) {  
-    block_number = read_map(rip,pos);
-    if (block_number!=previous_block_number) {
-      nblocks++;
-    }
-    previous_block_number=block_number;
+    	block_number = read_map(rip,pos);
+    	if (block_number!=previous_block_number) nblocks++;
+    	previous_block_number=block_number;
   }
 
   first_bit = search_free_region(rip->i_sp, ZMAP,0 ,nblocks>>scale); 
   if (first_bit == NO_BIT) {
-    nfrags=-1; /* set negative return value to notify of error*/
-    r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
+  	nfrags=-1; /* set negative return value to notify of error*/
+    	r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
         (size_t) sizeof(int), D);
-    return ENOSPC;
+    	return ENOSPC;
   }
   for(i=0; i<nblocks; i++) {
-    alloc_this_bit(rip->i_sp, ZMAP, first_bit+i);
+    	alloc_this_bit(rip->i_sp, ZMAP, first_bit+i);
   }
 
   /* see alloc_zone */
@@ -145,31 +143,30 @@ PUBLIC int fs_defrag()
 
   block_count=0;
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size,block_count++) {
-    src_block = read_map(rip,pos);
-    /* read current block */
-    bp_src = get_block(rip->i_dev, src_block, 1);  /* defined in cache.c */
-    bp_dst = get_block(rip->i_dev, first_block+block_count, 1);  
-    /* write block in current zone */
-    memcpy(bp_dst->b_data, bp_src->b_data, (size_t) bp_src->b_bytes);
-    bp_dst->b_dirt = DIRTY;
+    	src_block = read_map(rip,pos);
+    	/* read current block */
+    	bp_src = get_block(rip->i_dev, src_block, 1);  /* defined in cache.c */
+   	bp_dst = get_block(rip->i_dev, first_block+block_count, 1);  
+    	/* write block in current zone */
+    	memcpy(bp_dst->b_data, bp_src->b_data, (size_t) bp_src->b_bytes);
+    	bp_dst->b_dirt = DIRTY;
 
-    /*free cached blocks*/
-    put_block(bp_src,PARTIAL_DATA_BLOCK);
-    put_block(bp_dst,PARTIAL_DATA_BLOCK);
-
+    	/* free cached blocks */
+    	put_block(bp_src,PARTIAL_DATA_BLOCK);
+    	put_block(bp_dst,PARTIAL_DATA_BLOCK);
   }
-  /*modify inode*/
+  /* modify inode */
   zone = (pos/rip->i_sp->s_block_size) >> scale;
 
   /* free old zones */ 
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size) { 
-    write_map(rip, pos, 0, WMAP_FREE); 
+    	write_map(rip, pos, 0, WMAP_FREE); 
   }
   /* attach zones to inode */
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size) { 
-    block_number = (pos/rip->i_sp->s_block_size)+first_block;
-    zone = block_number >> scale;
-    write_map(rip, pos, zone, 0);
+    	block_number = (pos/rip->i_sp->s_block_size)+first_block;
+    	zone = block_number >> scale;
+   	write_map(rip, pos, zone, 0);
   }
   /* mark inode as dirty and give it back */
   rip->i_dirt=DIRTY;
