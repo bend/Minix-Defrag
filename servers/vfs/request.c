@@ -1066,9 +1066,9 @@ int *buf;
   int r;
   message m;
   grant_id = cpf_grant_direct(fs_e, (vir_bytes) &sb,
-				sizeof(int), CPF_WRITE);
+      sizeof(int), CPF_WRITE);
   if (grant_id < 0)
-	panic("req_nfrags: cpf_grant_* failed");
+    panic("req_nfrags: cpf_grant_* failed");
 
   /* Fill in request message */
   m.m_type = REQ_NFRAGS;
@@ -1080,22 +1080,13 @@ int *buf;
   r = fs_sendrec(fs_e, &m);
   cpf_revoke(grant_id);
 
-  /* recieves good value!*/ 
-  printf("le sb mis à jour dans send_rec = %d\n",sb);
+  /* receives good value!*/ 
   if (r == OK ) {
-  /* vircopy vers le pointeur nfrags défini dans nfrags de libc, passé comme argument buf par l'appel à req_nfrags dans do_nfrags  */
-	  r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
-			  sizeof(sb));
-  }
-  else {
-    return -1;
-  }
-  /*
-  if (r==OK) {
-    printf("the vircopy worked fine apparently\n");
-  }
+    /* vircopy of value to the pointer defined in libc/defrag, passed as argument buf in the call to req_defrag and do_defrag */
+    r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
+        sizeof(sb));
+  } 
   return(r);
-  */
 }
 
 
@@ -1108,18 +1099,18 @@ ino_t inode_nr;
 int who_e;
 int *buf;
 {
-    int sb;
-    cp_grant_id_t grant_id;
-    int r;
-    message m;
+  int sb;
+  cp_grant_id_t grant_id;
+  int r;
+  message m;
 
-    grant_id = cpf_grant_direct(fs_e,  (vir_bytes) &sb,
-				sizeof(int), CPF_WRITE);
-    if (grant_id < 0)
-	panic("req_defrag: cpf_grant_* failed");
-    /* Fill in request message */
-    m.m_type = REQ_DEFRAG;
-    m.REQ_INODE_NR = inode_nr;
+  grant_id = cpf_grant_direct(fs_e,  (vir_bytes) &sb,
+      sizeof(int), CPF_WRITE);
+  if (grant_id < 0)
+    panic("req_defrag: cpf_grant_* failed");
+  /* Fill in request message */
+  m.m_type = REQ_DEFRAG;
+  m.REQ_INODE_NR = inode_nr;
   m.REQ_GRANT = grant_id;
 
 
@@ -1128,12 +1119,9 @@ int *buf;
   cpf_revoke(grant_id);
 
   /* recieves good value!*/ 
-  printf("le sb mis à jour dans send_rec = %d\n",sb);
-  if (r == OK ) {
-  /* vircopy vers le pointeur defrags défini dans defrag de libc, passé comme argument buf par l'appel à req_defrag dans do_defrag  */
-	  r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
-			  sizeof(sb));
-  }
+    /* vircopy of value to the pointer defined in libc/defrag, passed as argument buf in the call to req_defrag and do_defrag */
+  r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
+        sizeof(sb));
   return(r);
 }
 

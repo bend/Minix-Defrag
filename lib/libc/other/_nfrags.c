@@ -17,6 +17,6 @@ PUBLIC int nfrags(const char* path )
 	 */ 
 	m.m1_p2 = (char* ) &nfrags;
 	_syscall(VFS_PROC_NR, NFRAGS, &m);
-	return nfrags;
+	return (nfrags);
 }
 

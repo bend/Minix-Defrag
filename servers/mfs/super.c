@@ -22,39 +22,39 @@
 
 
 /*===========================================================================*
- *				alloc_bit				     *
+ *                              alloc_bit                                    *
  *===========================================================================*/
 PUBLIC bit_t alloc_bit(sp, map, origin)
-struct super_block *sp;		/* the filesystem to allocate from */
-int map;			/* IMAP (inode map) or ZMAP (zone map) */
-bit_t origin;			/* number of bit to start searching at */
+struct super_block *sp;         /* the filesystem to allocate from */
+int map;                        /* IMAP (inode map) or ZMAP (zone map) */
+bit_t origin;                   /* number of bit to start searching at */
 {
 /* Allocate a bit from a bit map and return its bit number. */
 
-  block_t start_block;		/* first bit block */
+  block_t start_block;          /* first bit block */
   block_t block;
-  bit_t map_bits;		/* how many bits are there in the bit map? */
-  short bit_blocks;		/* how many blocks are there in the bit map? */
+  bit_t map_bits;               /* how many bits are there in the bit map? */
+  short bit_blocks;             /* how many blocks are there in the bit map? */
   unsigned word, bcount;
   struct buf *bp;
   bitchunk_t *wptr, *wlim, k;
   bit_t i, b;
 
   if (sp->s_rd_only)
-	panic("can't allocate bit on read-only filesys");
+        panic("can't allocate bit on read-only filesys");
 
   if (map == IMAP) {
-	start_block = START_BLOCK;
-	map_bits = (bit_t) (sp->s_ninodes + 1);
-	bit_blocks = sp->s_imap_blocks;
+        start_block = START_BLOCK;
+        map_bits = (bit_t) (sp->s_ninodes + 1);
+        bit_blocks = sp->s_imap_blocks;
   } else {
-	start_block = START_BLOCK + sp->s_imap_blocks;
-	map_bits = (bit_t) (sp->s_zones - (sp->s_firstdatazone - 1));
-	bit_blocks = sp->s_zmap_blocks;
+        start_block = START_BLOCK + sp->s_imap_blocks;
+        map_bits = (bit_t) (sp->s_zones - (sp->s_firstdatazone - 1));
+        bit_blocks = sp->s_zmap_blocks;
   }
 
   /* Figure out where to start the bit search (depends on 'origin'). */
-  if (origin >= map_bits) origin = 0;	/* for robustness */
+  if (origin >= map_bits) origin = 0;   /* for robustness */
 
   /* Locate the starting place. */
   block = (block_t) (origin / FS_BITS_PER_BLOCK(sp->s_block_size));
@@ -63,76 +63,76 @@ bit_t origin;			/* number of bit to start searching at */
   /* Iterate over all blocks plus one, because we start in the middle. */
   bcount = bit_blocks + 1;
   do {
-	bp = get_block(sp->s_dev, start_block + block, NORMAL);
-	wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
+        bp = get_block(sp->s_dev, start_block + block, NORMAL);
+        wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
 
-	/* Iterate over the words in block. */
-	for (wptr = &bp->b_bitmap[word]; wptr < wlim; wptr++) {
+        /* Iterate over the words in block. */
+        for (wptr = &bp->b_bitmap[word]; wptr < wlim; wptr++) {
 
-		/* Does this word contain a free bit? */
-		if (*wptr == (bitchunk_t) ~0) continue;
+                /* Does this word contain a free bit? */
+                if (*wptr == (bitchunk_t) ~0) continue;
 
-		/* Find and allocate the free bit. */
-		k = (bitchunk_t) conv2(sp->s_native, (int) *wptr);
-		for (i = 0; (k & (1 << i)) != 0; ++i) {}
+                /* Find and allocate the free bit. */
+                k = (bitchunk_t) conv2(sp->s_native, (int) *wptr);
+                for (i = 0; (k & (1 << i)) != 0; ++i) {}
 
-		/* Bit number from the start of the bit map. */
-		b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
-		    + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
-		    + i;
+                /* Bit number from the start of the bit map. */
+                b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
+                    + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
+                    + i;
 
-		/* Don't allocate bits beyond the end of the map. */
-		if (b >= map_bits) break;
+                /* Don't allocate bits beyond the end of the map. */
+                if (b >= map_bits) break;
 
-		/* Allocate and return bit number. */
-		k |= 1 << i;
-		*wptr = (bitchunk_t) conv2(sp->s_native, (int) k);
-		bp->b_dirt = DIRTY;
-		put_block(bp, MAP_BLOCK);
-		return(b);
-	}
-	put_block(bp, MAP_BLOCK);
-	if (++block >= (unsigned int) bit_blocks) /* last block, wrap around */
-		block = 0;
-	word = 0;
+                /* Allocate and return bit number. */
+                k |= 1 << i;
+                *wptr = (bitchunk_t) conv2(sp->s_native, (int) k);
+                bp->b_dirt = DIRTY;
+                put_block(bp, MAP_BLOCK);
+                return(b);
+        }
+        put_block(bp, MAP_BLOCK);
+        if (++block >= (unsigned int) bit_blocks) /* last block, wrap around */
+                block = 0;
+        word = 0;
   } while (--bcount > 0);
-  return(NO_BIT);		/* no bit could be allocated */
+  return(NO_BIT);               /* no bit could be allocated */
 }
 
 /*===========================================================================*
- *				alloc_this_bit				     *
+ *                              alloc_this_bit                               *
  *===========================================================================*/
 PUBLIC bit_t alloc_this_bit(sp, map, origin)
-struct super_block *sp;		/* the filesystem to allocate from */
-int map;			/* IMAP (inode map) or ZMAP (zone map) */
-bit_t origin;			/* number of bit to allocate */
+struct super_block *sp;         /* the filesystem to allocate from */
+int map;                        /* IMAP (inode map) or ZMAP (zone map) */
+bit_t origin;                   /* number of bit to allocate */
 {
-/* Allocate a bit from a bit map and return its bit number. */
+  /* Allocate a bit from a bit map and return its bit number. */
 
-  block_t start_block;		/* first bit block */
+  block_t start_block;          /* first bit block */
   block_t block;
-  bit_t map_bits;		/* how many bits are there in the bit map? */
-  short bit_blocks;		/* how many blocks are there in the bit map? */
+  bit_t map_bits;               /* how many bits are there in the bit map? */
+  short bit_blocks;             /* how many blocks are there in the bit map? */
   unsigned word, bcount;
   struct buf *bp;
   bitchunk_t *wptr, *wlim, k;
   bit_t i, b;
 
   if (sp->s_rd_only)
-	panic("can't allocate bit on read-only filesys");
+    panic("can't allocate bit on read-only filesys");
 
   if (map == IMAP) {
-	start_block = START_BLOCK;
-	map_bits = (bit_t) (sp->s_ninodes + 1);
-	bit_blocks = sp->s_imap_blocks;
+    start_block = START_BLOCK;
+    map_bits = (bit_t) (sp->s_ninodes + 1);
+    bit_blocks = sp->s_imap_blocks;
   } else {
-	start_block = START_BLOCK + sp->s_imap_blocks;
-	map_bits = (bit_t) (sp->s_zones - (sp->s_firstdatazone - 1));
-	bit_blocks = sp->s_zmap_blocks;
+    start_block = START_BLOCK + sp->s_imap_blocks;
+    map_bits = (bit_t) (sp->s_zones - (sp->s_firstdatazone - 1));
+    bit_blocks = sp->s_zmap_blocks;
   }
 
   /* Figure out where to start the bit search (depends on 'origin'). */
-  if (origin >= map_bits) origin = 0;	/* for robustness */
+  if (origin >= map_bits) origin = 0;   /* for robustness */
 
   /* Locate the starting place. */
   block = (block_t) (origin / FS_BITS_PER_BLOCK(sp->s_block_size));
@@ -141,51 +141,51 @@ bit_t origin;			/* number of bit to allocate */
   /* Iterate over all blocks plus one, because we start in the middle. */
   bcount = bit_blocks + 1;
   do {
-	bp = get_block(sp->s_dev, start_block + block, NORMAL);
-	wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
+    bp = get_block(sp->s_dev, start_block + block, NORMAL);
+    wlim = &bp->b_bitmap[FS_BITMAP_CHUNKS(sp->s_block_size)];
 
-	/* Iterate over the words in block. */
-	for (wptr = &bp->b_bitmap[word]; wptr < wlim; wptr++) {
+    /* Iterate over the words in block. */
+    for (wptr = &bp->b_bitmap[word]; wptr < wlim; wptr++) {
 
-		/* Does this word contain a free bit? */
-		if (*wptr == (bitchunk_t) ~0) continue;
+      /* Does this word contain a free bit? */
+      if (*wptr == (bitchunk_t) ~0) continue;
 
-		/* Find and allocate the free bit. */
-		k = (bitchunk_t) conv2(sp->s_native, (int) *wptr);
-		for (i = 0; (k & (1 << i)) != 0 || (((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size)) + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS + i) < origin; ++i) {}
+      /* Find and allocate the free bit. */
+      k = (bitchunk_t) conv2(sp->s_native, (int) *wptr);
+      for (i = 0; (k & (1 << i)) != 0 || (((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size)) + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS + i) < origin; ++i) {}
 
-		/* Bit number from the start of the bit map. */
-		b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
-		    + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
-		    + i;
+      /* Bit number from the start of the bit map. */
+      b = ((bit_t) block * FS_BITS_PER_BLOCK(sp->s_block_size))
+        + (wptr - &bp->b_bitmap[0]) * FS_BITCHUNK_BITS
+        + i;
 
-		/* Don't allocate bits beyond the end of the map. */
-		if (b >= map_bits) break;
+      /* Don't allocate bits beyond the end of the map. */
+      if (b >= map_bits) break;
 
-		if (b != origin ) { printf("first free bit found %d is different from requested %d \n",b,origin); break; };
-		/* Allocate and return bit number. */
-		k |= 1 << i;
-		*wptr = (bitchunk_t) conv2(sp->s_native, (int) k);
-		bp->b_dirt = DIRTY;
-		put_block(bp, MAP_BLOCK);
-		return(b);
-	}
-	put_block(bp, MAP_BLOCK);
-	if (++block >= (unsigned int) bit_blocks) /* last block, wrap around */
-		block = 0;
-	word = 0;
+      if (b != origin ) { printf("first free bit found %d is different from requested %d \n",b,origin); break; };
+      /* Allocate and return bit number. */
+      k |= 1 << i;
+      *wptr = (bitchunk_t) conv2(sp->s_native, (int) k);
+      bp->b_dirt = DIRTY;
+      put_block(bp, MAP_BLOCK);
+      return(b);
+    }
+    put_block(bp, MAP_BLOCK);
+    if (++block >= (unsigned int) bit_blocks) /* last block, wrap around */
+      block = 0;
+    word = 0;
   } while (--bcount > 0);
-  return(NO_BIT);		/* no bit could be allocated */
+  return(NO_BIT);               /* no bit could be allocated */
 }
 
 
 /*===========================================================================*
- *				free_bit				     *
+ *                              free_bit                                     *
  *===========================================================================*/
 PUBLIC void free_bit(sp, map, bit_returned)
-struct super_block *sp;		/* the filesystem to operate on */
-int map;			/* IMAP (inode map) or ZMAP (zone map) */
-bit_t bit_returned;		/* number of bit to insert into the map */
+struct super_block *sp;         /* the filesystem to operate on */
+int map;                        /* IMAP (inode map) or ZMAP (zone map) */
+bit_t bit_returned;             /* number of bit to insert into the map */
 {
 /* Return a zone or inode by turning off its bitmap bit. */
 
@@ -195,16 +195,16 @@ bit_t bit_returned;		/* number of bit to insert into the map */
   block_t start_block;
 
   if (sp->s_rd_only)
-	panic("can't free bit on read-only filesys");
+        panic("can't free bit on read-only filesys");
 
   if (map == IMAP) {
-	start_block = START_BLOCK;
+        start_block = START_BLOCK;
   } else {
-	start_block = START_BLOCK + sp->s_imap_blocks;
+        start_block = START_BLOCK + sp->s_imap_blocks;
   }
   block = bit_returned / FS_BITS_PER_BLOCK(sp->s_block_size);
   word = (bit_returned % FS_BITS_PER_BLOCK(sp->s_block_size))
-  	 / FS_BITCHUNK_BITS;
+         / FS_BITCHUNK_BITS;
 
   bit = bit_returned % FS_BITCHUNK_BITS;
   mask = 1 << bit;
@@ -213,8 +213,8 @@ bit_t bit_returned;		/* number of bit to insert into the map */
 
   k = (bitchunk_t) conv2(sp->s_native, (int) bp->b_bitmap[word]);
   if (!(k & mask)) {
-  	if (map == IMAP) panic("tried to free unused inode");
-  	else panic("tried to free unused block: %u", bit_returned);
+        if (map == IMAP) panic("tried to free unused inode");
+        else panic("tried to free unused block: %u", bit_returned);
   }
 
   k &= ~mask;
@@ -226,29 +226,29 @@ bit_t bit_returned;		/* number of bit to insert into the map */
 
 
 /*===========================================================================*
- *				get_super				     *
+ *                              get_super                                    *
  *===========================================================================*/
 PUBLIC struct super_block *get_super(
-  dev_t dev			/* device number whose super_block is sought */
+  dev_t dev                     /* device number whose super_block is sought */
 )
 {
   if (dev == NO_DEV)
-  	panic("request for super_block of NO_DEV");
+        panic("request for super_block of NO_DEV");
 
   if(superblock.s_dev != dev)
-  	panic("wrong superblock: %d", (int) dev);
+        panic("wrong superblock: %d", (int) dev);
 
   return(&superblock);
 }
 
 
 /*===========================================================================*
- *				get_block_size				     *
+ *                              get_block_size                               *
  *===========================================================================*/
 PUBLIC unsigned int get_block_size(dev_t dev)
 {
   if (dev == NO_DEV)
-  	panic("request for block size of NO_DEV");
+        panic("request for block size of NO_DEV");
 
   return(fs_block_size);
 
@@ -256,7 +256,7 @@ PUBLIC unsigned int get_block_size(dev_t dev)
 
 
 /*===========================================================================*
- *				read_super				     *
+ *                              read_super                                   *
  *===========================================================================*/
 PUBLIC int read_super(sp)
 register struct super_block *sp; /* pointer to a superblock */
@@ -270,31 +270,31 @@ register struct super_block *sp; /* pointer to a superblock */
 
   STATICINIT(sbbuf, _MIN_BLOCK_SIZE);
 
-  dev = sp->s_dev;		/* save device (will be overwritten by copy) */
+  dev = sp->s_dev;              /* save device (will be overwritten by copy) */
   if (dev == NO_DEV)
-  	panic("request for super_block of NO_DEV");
+        panic("request for super_block of NO_DEV");
   
   r = block_dev_io(MFS_DEV_READ, dev, SELF_E, sbbuf, cvu64(SUPER_BLOCK_BYTES),
-  		   _MIN_BLOCK_SIZE);
+                   _MIN_BLOCK_SIZE);
   if (r != _MIN_BLOCK_SIZE) 
-  	return(EINVAL);
+        return(EINVAL);
   
   memcpy(sp, sbbuf, sizeof(*sp));
-  sp->s_dev = NO_DEV;		/* restore later */
-  magic = sp->s_magic;		/* determines file system type */
+  sp->s_dev = NO_DEV;           /* restore later */
+  magic = sp->s_magic;          /* determines file system type */
 
   /* Get file system version and type. */
   if (magic == SUPER_MAGIC || magic == conv2(BYTE_SWAP, SUPER_MAGIC)) {
-	version = V1;
-	native  = (magic == SUPER_MAGIC);
+        version = V1;
+        native  = (magic == SUPER_MAGIC);
   } else if (magic == SUPER_V2 || magic == conv2(BYTE_SWAP, SUPER_V2)) {
-	version = V2;
-	native  = (magic == SUPER_V2);
+        version = V2;
+        native  = (magic == SUPER_V2);
   } else if (magic == SUPER_V3) {
-	version = V3;
-  	native = 1;
+        version = V3;
+        native = 1;
   } else {
-	return(EINVAL);
+        return(EINVAL);
   }
 
   /* If the super block has the wrong byte order, swap the fields; the magic
@@ -320,20 +320,20 @@ register struct super_block *sp; /* pointer to a superblock */
    * hide some of the differences.
    */
   if (version == V1) {
-  	sp->s_block_size = _STATIC_BLOCK_SIZE;
-	sp->s_zones = (zone_t) sp->s_nzones;	/* only V1 needs this copy */
-	sp->s_inodes_per_block = V1_INODES_PER_BLOCK;
-	sp->s_ndzones = V1_NR_DZONES;
-	sp->s_nindirs = V1_INDIRECTS;
+        sp->s_block_size = _STATIC_BLOCK_SIZE;
+        sp->s_zones = (zone_t) sp->s_nzones;    /* only V1 needs this copy */
+        sp->s_inodes_per_block = V1_INODES_PER_BLOCK;
+        sp->s_ndzones = V1_NR_DZONES;
+        sp->s_nindirs = V1_INDIRECTS;
   } else {
-  	if (version == V2)
-  		sp->s_block_size = _STATIC_BLOCK_SIZE;
-  	if (sp->s_block_size < _MIN_BLOCK_SIZE) {
-  		return EINVAL;
-	}
-	sp->s_inodes_per_block = V2_INODES_PER_BLOCK(sp->s_block_size);
-	sp->s_ndzones = V2_NR_DZONES;
-	sp->s_nindirs = V2_INDIRECTS(sp->s_block_size);
+        if (version == V2)
+                sp->s_block_size = _STATIC_BLOCK_SIZE;
+        if (sp->s_block_size < _MIN_BLOCK_SIZE) {
+                return EINVAL;
+        }
+        sp->s_inodes_per_block = V2_INODES_PER_BLOCK(sp->s_block_size);
+        sp->s_ndzones = V2_NR_DZONES;
+        sp->s_nindirs = V2_INDIRECTS(sp->s_block_size);
   }
 
   /* For even larger disks, a similar problem occurs with s_firstdatazone.
@@ -341,51 +341,51 @@ register struct super_block *sp; /* pointer to a superblock */
    * large to fit, and compute it on the fly.
    */
   if (sp->s_firstdatazone_old == 0) {
-	offset = START_BLOCK + sp->s_imap_blocks + sp->s_zmap_blocks;
-	offset += (sp->s_ninodes + sp->s_inodes_per_block - 1) /
-		sp->s_inodes_per_block;
+        offset = START_BLOCK + sp->s_imap_blocks + sp->s_zmap_blocks;
+        offset += (sp->s_ninodes + sp->s_inodes_per_block - 1) /
+                sp->s_inodes_per_block;
 
-	sp->s_firstdatazone = (offset + (1 << sp->s_log_zone_size) - 1) >>
-		sp->s_log_zone_size;
+        sp->s_firstdatazone = (offset + (1 << sp->s_log_zone_size) - 1) >>
+                sp->s_log_zone_size;
   } else {
-	sp->s_firstdatazone = (zone_t) sp->s_firstdatazone_old;
+        sp->s_firstdatazone = (zone_t) sp->s_firstdatazone_old;
   }
 
   if (sp->s_block_size < _MIN_BLOCK_SIZE) 
-  	return(EINVAL);
+        return(EINVAL);
   
   if ((sp->s_block_size % 512) != 0) 
-  	return(EINVAL);
+        return(EINVAL);
   
   if (SUPER_SIZE > sp->s_block_size) 
-  	return(EINVAL);
+        return(EINVAL);
   
   if ((sp->s_block_size % V2_INODE_SIZE) != 0 ||
      (sp->s_block_size % V1_INODE_SIZE) != 0) {
-  	return(EINVAL);
+        return(EINVAL);
   }
 
   /* Limit s_max_size to LONG_MAX */
   if ((unsigned long)sp->s_max_size > LONG_MAX) 
-	sp->s_max_size = LONG_MAX;
+        sp->s_max_size = LONG_MAX;
 
-  sp->s_isearch = 0;		/* inode searches initially start at 0 */
-  sp->s_zsearch = 0;		/* zone searches initially start at 0 */
+  sp->s_isearch = 0;            /* inode searches initially start at 0 */
+  sp->s_zsearch = 0;            /* zone searches initially start at 0 */
   sp->s_version = version;
   sp->s_native  = native;
 
   /* Make a few basic checks to see if super block looks reasonable. */
   if (sp->s_imap_blocks < 1 || sp->s_zmap_blocks < 1
-				|| sp->s_ninodes < 1 || sp->s_zones < 1
-				|| sp->s_firstdatazone <= 4
-				|| sp->s_firstdatazone >= sp->s_zones
-				|| (unsigned) sp->s_log_zone_size > 4) {
-  	printf("not enough imap or zone map blocks, \n");
-  	printf("or not enough inodes, or not enough zones, \n"
-  		"or invalid first data zone, or zone size too large\n");
-	return(EINVAL);
+                                || sp->s_ninodes < 1 || sp->s_zones < 1
+                                || sp->s_firstdatazone <= 4
+                                || sp->s_firstdatazone >= sp->s_zones
+                                || (unsigned) sp->s_log_zone_size > 4) {
+        printf("not enough imap or zone map blocks, \n");
+        printf("or not enough inodes, or not enough zones, \n"
+                "or invalid first data zone, or zone size too large\n");
+        return(EINVAL);
   }
-  sp->s_dev = dev;		/* restore device number */
+  sp->s_dev = dev;              /* restore device number */
   return(OK);
 }
 

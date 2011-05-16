@@ -25,6 +25,7 @@ PUBLIC int fs_nfrags()
   scale = rip->i_sp->s_log_zone_size;
    
   nfrags  = nb_frags(rip);
+  /* FIXME */
   printf("will print map\n");
   print_map(rip->i_sp, ZMAP);
 
@@ -36,19 +37,10 @@ PUBLIC int fs_nfrags()
     previous_block_number=block_number;
   }
   
-  printf("need %d blocks region", nblocks);
   first_bit = search_free_region(rip->i_sp, ZMAP,0 ,nblocks>>scale);
 
-
-
-
-
-  printf("number of fragments = %d\n", nfrags);
-  
   put_inode(rip);		/* release the inode */
-  /*works fine  */
   r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
   		(size_t) sizeof(int), D);
-  
   return(r);
 }

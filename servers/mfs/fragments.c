@@ -65,24 +65,23 @@ int map;            /* IMAP (inode map) or ZMAP (zone map) */
 
 
 PUBLIC int nb_frags(rip)
-register struct inode *rip;
+register struct inode *rip;     /* inode pointer */
 {
-    int nfrags ;
-    off_t pos;
-    int scale;
-    block_t block_number, previous_block_number;
-    nfrags = 0;
-    scale = rip->i_sp->s_log_zone_size;
-    /* count number of fragments */
-    for (pos=0; pos<rip->i_size; pos++){                               
-	block_number = read_map(rip,pos);
-	if (block_number!=previous_block_number){
-	    printf("currentblock = %d\n", block_number>>scale);
-	    if (block_number-previous_block_number>1 || block_number-previous_block_number<0 ){
-	    nfrags++;
-	    }
-	}
-	previous_block_number=block_number;
+  int nfrags;                   /* number of fragments of the file*/
+  off_t pos;                    /* position in the file (for iteration)*/
+  block_t block_number,         /* iteration variables*/
+    previous_block_number;
+
+  nfrags = 0;
+  /* count number of fragments */
+  for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size){                               
+    block_number = read_map(rip,pos);
+    if (block_number!=previous_block_number){
+      if (block_number-previous_block_number>1 || block_number-previous_block_number<0) {
+        nfrags++;
+      }
     }
-    return(nfrags);
+    previous_block_number=block_number;
+  }
+  return(nfrags);
 }
