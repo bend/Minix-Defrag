@@ -126,7 +126,6 @@ PUBLIC int fs_defrag()
 
   first_bit = search_free_region(rip->i_sp, ZMAP,0 ,nblocks>>scale); 
   if (first_bit == NO_BIT) {
-    	printf("Error, no bit found, returning -1\n");
   	nfrags=-1; /* set negative return value to notify of error*/
     	r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
         (size_t) sizeof(int), D);
@@ -174,7 +173,6 @@ PUBLIC int fs_defrag()
   /* mark inode as dirty and give it back */
   rip->i_dirt=DIRTY;
   put_inode(rip);		/* release the inode */
-  printf("setting return val to %d\n" ,nfrags);
   /* return number of fragments of original file */
   r = sys_safecopyto(fs_m_in.m_source, (cp_grant_id_t) fs_m_in.REQ_GRANT, (vir_bytes) 0, (vir_bytes) &nfrags,
       (size_t) sizeof(int), D);
