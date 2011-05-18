@@ -1115,7 +1115,7 @@ int *buf;
   cpf_revoke(grant_id);
 
   /* vircopy of value to the pointer defined in libc/defrag, passed as argument buf in the call to req_defrag and do_defrag */
-  r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
+  sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) buf, 
         sizeof(sb));
   return(r);
 }
