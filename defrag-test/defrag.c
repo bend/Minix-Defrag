@@ -9,8 +9,10 @@ main (int argc, const char * argv[])
         result = defrag(argv[1]);
         if (result<1)
                 return 1;
-        if (result==1)
+        if (result==1){
                 printf("did not defragment existing defragmented file\n");
+		return 1;
+	}
         else
                 printf("defragmented file composed of %d fragments\n", result);
         return 0;

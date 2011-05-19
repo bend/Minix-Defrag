@@ -162,7 +162,7 @@ PUBLIC int fs_defrag()
 
   /* free old zones */ 
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size) { 
-    	write_map(rip, pos, 0, WMAP_FREE); 
+    	write_map(rip, pos, NO_ZONE, WMAP_FREE); 
   }
   /* attach zones to inode */
   for (pos=0; pos<rip->i_size; pos+=rip->i_sp->s_block_size) { 
