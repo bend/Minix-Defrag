@@ -1,3 +1,4 @@
+
 #ifndef __MFS_PROTO_H__
 #define __MFS_PROTO_H__
 
@@ -22,9 +23,6 @@ _PROTOTYPE( void set_blocksize, (unsigned int blocksize)				);
 _PROTOTYPE( void rw_scattered, (dev_t dev,
 			struct buf **bufq, int bufqsize, int rw_flag)	);
 
-/* defrag.c */
-_PROTOTYPE( int fs_defrag, (void)					);
-
 /* device.c */
 _PROTOTYPE( int block_dev_io, (int op, dev_t dev, endpoint_t proc_e,
 				void *buf, u64_t pos, size_t bytes)	);
@@ -32,6 +30,9 @@ _PROTOTYPE( int dev_open, (endpoint_t driver_e, dev_t dev, endpoint_t proc_e,
 							int flags)	);
 _PROTOTYPE( void dev_close, (endpoint_t driver_e, dev_t dev)		);
 _PROTOTYPE( int fs_new_driver, (void)					);
+
+/* defrag.c */
+_PROTOTYPE( int fs_defrag, (void)					);
 
 /* inode.c */
 _PROTOTYPE( struct inode *alloc_inode, (dev_t dev, mode_t bits)		);
@@ -63,7 +64,6 @@ _PROTOTYPE( int fs_unmount, (void)					);
 
 /* nfrags.c */
 _PROTOTYPE( int fs_nfrags, (void)					);
-
 
 /* open.c */
 _PROTOTYPE( int fs_create, (void)					);

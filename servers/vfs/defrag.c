@@ -11,28 +11,45 @@
 
 PUBLIC int do_defrag()
 {
-  int r;
+  int r, sb;
   struct vnode *vp;
+  cp_grant_id_t grant_id;
 
   /* initialise r */
   r=OK;
 
   /* See if file exists */
-  if (fetch_name(m_in.name1, m_in.name1_length, M1) != OK) return(err_code);
-  if ((vp = eat_path(PATH_NOFLAGS, fp)) == NULL) return(err_code);
-  /* Check file type  */
-  if( (vp->v_mode & I_TYPE) != I_REGULAR) 
-      r = EPERM;
-  /* If error, return the inode. */
-  if (r != OK) {
-      printf("result not ok, returning vnode");
-	  put_vnode(vp);
-	  return(r);
+  if (fetch_name(m_in.name1, m_in.name1_length, M1) != OK) {
+	sb = -1;
+    	r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) m_in.name2, 
+        sizeof(sb));
+    	return(err_code);
   }
-  /* send request to file system */
-  printf("sending request to fs");
-  /* message is sent to the right process, which will have the global variable fs_dev set correctly*/
-  r = req_defrag(vp->v_fs_e, vp->v_inode_nr, who_e);
-  put_vnode(vp);
+  if ((vp = eat_path(PATH_NOFLAGS, fp)) == NULL) {
+	sb = -1;
+    	r = sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) m_in.name2, 
+        sizeof(sb));
+    	return(err_code);
+  }	
+  /* Check file type  */
+  if( (vp->v_mode & I_TYPE) != I_REGULAR) {
+    	r = EPERM;
+  }
+  if(vp->v_ref_count > 1) {
+    	r = EBUSY;  /* resource busy if file opened */
+  }
+    
+  /* If error, free the inode. */
+  if (r != OK) {
+	sb = -1;
+    	sys_vircopy(SELF, D, (vir_bytes) &sb, who_e, D, (vir_bytes) m_in.name2, 
+        sizeof(sb));
+  	put_vnode(vp);
+    	return(r);
+  }
+  /* send request to file system 									*/
+  /* message is sent to the right process, which will have the global variable fs_dev set correctly	*/
+  r = req_defrag(vp->v_fs_e, vp->v_inode_nr, who_e, (int*) m_in.name2);
+  put_vnode(vp); /* free vnode */
   return r;
 }
