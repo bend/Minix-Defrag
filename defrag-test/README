@@ -1,0 +1,13 @@
+Les tests utilisent une partition montées dans /mnt/test. Nous avons utilisé
+une très petite partition de 1Mb pour nos test car utiliser de plus grande
+partition n'était pas possible pratiquement: notre machine virtuelle bloquait
+lorsque nous effectuions trop d'opération I/O.
+
+Notre script de test cependant permet de travailler avec des partition plus
+grande: la taille des fichiers créés est paramétré selon la taille de la
+partition utilisée (la détection n'est pas automatique, l'utilisateur doit
+entre la valeur).
+
+Le script de test fait aussi un seed de /dev/urandom, car les fichiers créés le
+sont à partir de /dev/urandom, et nous avons eu de nombreux probleme avec
+urandom qui n'était pas "seeded".
